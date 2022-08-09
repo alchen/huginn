@@ -1,0 +1,38 @@
+version: '3'
+volumes:
+  22199b2a8f7beafa7c7c0f9b3b5628afaff396d93a905f24279a29746dc83469:
+    external: true
+services:
+  postgres:
+    image: postgres:9.5-alpine
+    restart: always
+    env_file:
+      - ./docker/postgres.env
+    ports:
+      - "7890:5432"
+    volumes:
+      - 22199b2a8f7beafa7c7c0f9b3b5628afaff396d93a905f24279a29746dc83469:/var/lib/postgresql/data
+
+  web:
+    image: huginn/huginn-single-process
+    build: ./
+    restart: always
+    ports:
+      - "3456:3000"
+    env_file:
+      - ./docker/postgres.env
+      - ./docker/secrets.env
+    depends_on:
+      - postgres
+
+  threaded:
+    image: huginn/huginn-single-process
+    build: ./
+    command: /scripts/init bin/threaded.rb
+    restart: always
+    env_file:
+      - ./docker/postgres.env
+      - ./docker/secrets.env
+    depends_on:
+      - postgres
+      - web
